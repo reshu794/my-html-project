@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Cleaning Project | Sales Data Analytics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #1e3c72;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header h1 i {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stats-badge {
+            background: #e8f4f8;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* Data Quality Cards */
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .quality-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .quality-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        @keyframes fadeInUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .quality-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .quality-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+
+        .quality-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        /* Data Preview */
+        .data-preview {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #1e3c72;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .null-value {
+            background: #ffebee;
+            color: #c62828;
+            font-style: italic;
+        }
+
+        /* Cleaning Actions */
+        .cleaning-actions {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .action-group {
+            margin-bottom: 20px;
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-info {
+            background: #2196f3;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Charts */
+        .charts-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .chart-container {
+            margin-bottom: 25px;
+        }
+
+        canvas {
+            max-height: 250px;
+        }
+
+        /* Logs */
+        .logs-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .log-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            padding: 5px 10px;
+            border-bottom: 1px solid #ddd;
+            color: #333;
+        }
+
+        .log-time {
+            color: #666;
+            margin-right: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-broom"></i>
+                Data Cleaning Project
+                <span style="font-size: 14px; background: #e8f4f8; padding: 5px 12px; border-radius: 20px;">Sales Data Analytics</span>
+            </h1>
+            <div class="stats-badge">
+                <i class="fas fa-database"></i> Real-world dirty data | 6 cleaning operations | Before & After analysis
+            </div>
+        </div>
+
+        <!-- Data Quality Dashboard -->
+        <div class="quality-grid" id="qualityGrid">
+            <!-- Will be populated by JS -->
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-grid">
+            <!-- Data Preview -->
+            <div class="data-preview">
+                <div class="section-title">
+                    <i class="fas fa-table"></i>
+                    Data Preview
+                    <span style="margin-left: auto; font-size: 12px; color: #666;" id="rowCount"></span>
+                </div>
+                <div class="table-container">
+                    <table id="dataTable">
+                        <thead id="tableHeader"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Cleaning Actions -->
+            <div class="cleaning-actions">
+                <div class="section-title">
+                    <i class="fas fa-tools"></i>
+                    Data Cleaning Operations
+                </div>
+
+                <div class="action-group">
+                    <div class="action-title">
+                        <i class="fas fa-ban"></i> 1. Missing Values
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="handleMissingValues('fill')">
+                            <i class="fas fa-fill-drip"></i> Fill with Mean
+                        </button>
+                        <button class="btn btn-warning" onclick="handleMissingValues('drop')">
+                            <i class="fas fa-trash"></i> Drop Rows
+                        </button>
+                        <button class="btn btn-info" onclick="handleMissingValues('median')">
+                            <i class="fas fa-chart-line"></i> Fill with Median
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-group">
+                    <div class="action-title">
+                        <i class="fas fa-trash-alt"></i> 2. Remove Duplicates
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="removeDuplicates()">
+                            <i class="fas fa-copy"></i> Remove Duplicate Rows
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-group">
+                    <div class="action-title">
+                        <i class="fas fa-chart-line"></i> 3. Outlier Detection
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-warning" onclick="detectOutliers()">
+                            <i class="fas fa-chart-line"></i> Detect Outliers
+                        </button>
+                        <button class="btn btn-danger" onclick="removeOutliers()">
+                            <i class="fas fa-cut"></i> Remove Outliers
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-group">
+                    <div class="action-title">
+                        <i class="fas fa-format"></i> 4. Data Formatting
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="formatDates()">
+                            <i class="fas fa-calendar"></i> Standardize Dates
+                        </button>
+                        <button class="btn btn-info" onclick="fixCasing()">
+                            <i class="fas fa-text-height"></i> Fix Text Casing
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-group">
+                    <div class="action-title">
+                        <i class="fas fa-chart-simple"></i> 5. Data Transformation
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="normalizeData()">
+                            <i class="fas fa-chart-line"></i> Normalize Numbers
+                        </button>
+                        <button class="btn btn-info" onclick="addCalculatedFields()">
+                            <i class="fas fa-calculator"></i> Add Calculated Fields
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-group">
+                    <div class="action-title">
+                        <i class="fas fa-undo-alt"></i> 6. Reset
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-danger" onclick="resetData()">
+                            <i class="fas fa-undo"></i> Reset to Original Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                Data Analytics (Before Cleaning)
+            </div>
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Cleaning Logs -->
+        <div class="logs-section">
+            <div class="section-title">
+                <i class="fas fa-list-alt"></i>
+                Cleaning Log
+                <button class="btn" onclick="clearLogs()" style="margin-left: auto; padding: 5px 12px; background: #f0f0f0;">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+            <div class="log-list" id="logList">
+                <div class="log-entry">📋 Ready to clean data. Click any operation above.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Original dirty data
+        let originalData = [
+            { id: 1, name: "john doe", category: "Electronics", price: 999.99, quantity: 2, date: "2024-01-15", revenue: null, region: "North" },
+            { id: 2, name: "JANE SMITH", category: "Clothing", price: 49.99, quantity: null, date: "2024/01/20", revenue: null, region: "South" },
+            { id: 3, name: "Bob Johnson", category: "Electronics", price: 299.99, quantity: 1, date: "Jan 25, 2024", revenue: null, region: "East" },
+            { id: 4, name: "alice williams", category: "Books", price: 15.99, quantity: 5, date: "2024-01-10", revenue: null, region: "West" },
+            { id: 5, name: "CHARLIE BROWN", category: "Clothing", price: 89.99, quantity: 2, date: "2024/01/18", revenue: null, region: "North" },
+            { id: 6, name: "diana prince", category: "Electronics", price: 599.99, quantity: null, date: "2024-01-22", revenue: null, region: "South" },
+            { id: 7, name: "Eva Green", category: "Books", price: 25.99, quantity: 3, date: "Jan 30, 2024", revenue: null, region: null },
+            { id: 8, name: "frank castle", category: "Electronics", price: 1299.99, quantity: 1, date: "2024-01-05", revenue: null, region: "East" },
+            { id: 9, name: "grace hopper", category: "Books", price: null, quantity: 2, date: "2024-01-12", revenue: null, region: "West" },
+            { id: 10, name: "HENRY CAVILL", category: "Clothing", price: 199.99, quantity: null, date: "2024/01/28", revenue: null, region: "North" },
+            { id: 11, name: "iris west", category: "Electronics", price: 449.99, quantity: 1, date: "2024-01-08", revenue: null, region: "South" },
+            { id: 12, name: "jack ryan", category: "Books", price: 12.99, quantity: 10, date: "Jan 15, 2024", revenue: null, region: "East" },
+            { id: 13, name: "kate bishop", category: "Clothing", price: 149.99, quantity: 2, date: "2024-01-25", revenue: null, region: null },
+            { id: 14, name: "bruce wayne", category: "Electronics", price: 899.99, quantity: 1, date: "2024/01/03", revenue: null, region: "West" },
+            { id: 15, name: "clark kent", category: "Books", price: 19.99, quantity: 4, date: "2024-01-19", revenue: null, region: "North" }
+        ];
+
+        // Duplicate data (intentional duplicates for demo)
+        let duplicateData = [
+            { id: 16, name: "john doe", category: "Electronics", price: 999.99, quantity: 2, date: "2024-01-15", revenue: null, region: "North" },
+            { id: 17, name: "JANE SMITH", category: "Clothing", price: 49.99, quantity: null, date: "2024/01/20", revenue: null, region: "South" }
+        ];
+
+        let currentData = [...originalData, ...duplicateData];
+        let cleaningLog = [];
+
+        // Add log entry
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const icon = type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '📝';
+            cleaningLog.unshift({ time, message, type });
+            if (cleaningLog.length > 20) cleaningLog.pop();
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logList = document.getElementById('logList');
+            if (cleaningLog.length === 0) {
+                logList.innerHTML = '<div class="log-entry">📋 Ready to clean data. Click any operation above.</div>';
+                return;
+            }
+            logList.innerHTML = cleaningLog.map(log => 
+                `<div class="log-entry"><span class="log-time">${log.time}</span> ${log.message}</div>`
+            ).join('');
+        }
+
+        function clearLogs() {
+            cleaningLog = [];
+            updateLogDisplay();
+            addLog('Logs cleared');
+        }
+
+        // Calculate quality metrics
+        function calculateQualityMetrics() {
+            const totalRows = currentData.length;
+            let missingValues = 0;
+            let duplicateCount = 0;
+            
+            // Check missing values
+            currentData.forEach(row => {
+                Object.values(row).forEach(val => {
+                    if (val === null || val === undefined || val === '') missingValues++;
+                });
+            });
+            
+            // Check duplicates (simplified)
+            const uniqueCheck = new Set();
+            currentData.forEach(row => {
+                const key = `${row.name}|${row.category}|${row.price}`;
+                if (uniqueCheck.has(key)) duplicateCount++;
+                else uniqueCheck.add(key);
+            });
+            
+            // Calculate completeness
+            const totalCells = totalRows * Object.keys(currentData[0] || {}).length;
+            const completeness = ((totalCells - missingValues) / totalCells * 100).toFixed(1);
+            
+            document.getElementById('qualityGrid').innerHTML = `
+                <div class="quality-card">
+                    <div class="quality-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="quality-value">${totalRows}</div>
+                    <div class="quality-label">Total Rows</div>
+                </div>
+                <div class="quality-card">
+                    <div class="quality-icon"><i class="fas fa-ban"></i></div>
+                    <div class="quality-value">${missingValues}</div>
+                    <div class="quality-label">Missing Values</div>
+                </div>
+                <div class="quality-card">
+                    <div class="quality-icon"><i class="fas fa-copy"></i></div>
+                    <div class="quality-value">${duplicateCount}</div>
+                    <div class="quality-label">Duplicates</div>
+                </div>
+                <div class="quality-card">
+                    <div class="quality-icon"><i class="fas fa-chart-pie"></i></div>
+                    <div class="quality-value">${completeness}%</div>
+                    <div class="quality-label">Data Completeness</div>
+                </div>
+            `;
+            
+            document.getElementById('rowCount').innerHTML = `${totalRows} rows`;
+        }
+
+        // Render table
+        function renderTable() {
+            if (!currentData.length) return;
+            
+            const headers = Object.keys(currentData[0]);
+            document.getElementById('tableHeader').innerHTML = `
+                <tr>${headers.map(h => `<th>${h.toUpperCase()}</th>`).join('')}</tr>
+            `;
+            
+            document.getElementById('tableBody').innerHTML = currentData.map(row => `
+                <tr>
+                    ${headers.map(h => {
+                        let value = row[h];
+                        if (value === null || value === undefined) {
+                            return `<td class="null-value">NULL</td>`;
+                        }
+                        if (h === 'price' || h === 'revenue') {
+                            return `<td>$${value.toFixed(2)}</td>`;
+                        }
+                        return `<td>${value}</td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+            
+            calculateQualityMetrics();
+            updateCharts();
+        }
+
+        // Handle missing values
+        function handleMissingValues(method) {
+            const meanPrice = currentData.filter(d => d.price !== null).reduce((sum, d) => sum + d.price, 0) / currentData.filter(d => d.price !== null).length;
+            const medianPrice = currentData.filter(d => d.price !== null).map(d => d.price).sort((a,b) => a-b)[Math.floor(currentData.filter(d => d.price !== null).length/2)];
+            const meanQuantity = currentData.filter(d => d.quantity !== null).reduce((sum, d) => sum + d.quantity, 0) / currentData.filter(d => d.quantity !== null).length;
+            
+            if (method === 'fill') {
+                currentData = currentData.map(row => ({
+                    ...row,
+                    price: row.price === null ? meanPrice : row.price,
+                    quantity: row.quantity === null ? Math.round(meanQuantity) : row.quantity,
+                    region: row.region === null ? 'Unknown' : row.region
+                }));
+                addLog(`Filled missing values: Price (mean: $${meanPrice.toFixed(2)}), Quantity (mean: ${Math.round(meanQuantity)}), Region ('Unknown')`, 'success');
+            } 
+            else if (method === 'median') {
+                currentData = currentData.map(row => ({
+                    ...row,
+                    price: row.price === null ? medianPrice : row.price,
+                    quantity: row.quantity === null ? Math.round(medianPrice) : row.quantity,
+                    region: row.region === null ? 'Unknown' : row.region
+                }));
+                addLog(`Filled missing values: Price (median: $${medianPrice.toFixed(2)}), Region ('Unknown')`, 'success');
+            }
+            else if (method === 'drop') {
+                const beforeCount = currentData.length;
+                currentData = currentData.filter(row => 
+                    row.price !== null && row.quantity !== null && row.region !== null
+                );
+                addLog(`Dropped ${beforeCount - currentData.length} rows with missing values`, 'warning');
+            }
+            
+            renderTable();
+        }
+
+        // Remove duplicates
+        function removeDuplicates() {
+            const beforeCount = currentData.length;
+            const seen = new Set();
+            currentData = currentData.filter(row => {
+                const key = `${row.name}|${row.category}|${row.price}|${row.quantity}|${row.date}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+            addLog(`Removed ${beforeCount - currentData.length} duplicate rows`, 'success');
+            renderTable();
+        }
+
+        // Detect outliers
+        function detectOutliers() {
+            const prices = currentData.filter(d => d.price !== null).map(d => d.price);
+            prices.sort((a,b) => a-b);
+            const q1 = prices[Math.floor(prices.length * 0.25)];
+            const q3 = prices[Math.floor(prices.length * 0.75)];
+            const iqr = q3 - q1;
+            const lowerBound = q1 - 1.5 * iqr;
+            const upperBound = q3 + 1.5 * iqr;
+            const outliers = currentData.filter(d => d.price < lowerBound || d.price > upperBound);
+            addLog(`Detected ${outliers.length} price outliers (IQR method). Lower: $${lowerBound.toFixed(2)}, Upper: $${upperBound.toFixed(2)}`, 'warning');
+            alert(`Found ${outliers.length} price outliers!\nLower bound: $${lowerBound.toFixed(2)}\nUpper bound: $${upperBound.toFixed(2)}`);
+        }
+
+        // Remove outliers
+        function removeOutliers() {
+            const beforeCount = currentData.length;
+            const prices = currentData.filter(d => d.price !== null).map(d => d.price);
+            prices.sort((a,b) => a-b);
+            const q1 = prices[Math.floor(prices.length * 0.25)];
+            const q3 = prices[Math.floor(prices.length * 0.75)];
+            const iqr = q3 - q1;
+            const lowerBound = q1 - 1.5 * iqr;
+            const upperBound = q3 + 1.5 * iqr;
+            currentData = currentData.filter(d => d.price >= lowerBound && d.price <= upperBound);
+            addLog(`Removed ${beforeCount - currentData.length} outlier rows`, 'success');
+            renderTable();
+        }
+
+        // Format dates
+        function formatDates() {
+            currentData = currentData.map(row => {
+                let formattedDate = row.date;
+                if (row.date && row.date.includes('/')) {
+                    const parts = row.date.split('/');
+                    formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+                }
+                if (row.date && row.date.includes('Jan')) {
+                    const match = row.date.match(/Jan (\d+), (\d+)/);
+                    if (match) formattedDate = `${match[2]}-01-${match[1].padStart(2,'0')}`;
+                }
+                return { ...row, date: formattedDate };
+            });
+            addLog('Standardized date formats to YYYY-MM-DD', 'success');
+            renderTable();
+        }
+
+        // Fix text casing
+        function fixCasing() {
+            currentData = currentData.map(row => ({
+                ...row,
+                name: row.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' '),
+                category: row.category.charAt(0).toUpperCase() + row.category.slice(1).toLowerCase(),
+                region: row.region ? row.region.charAt(0).toUpperCase() + row.region.slice(1).toLowerCase() : null
+            }));
+            addLog('Fixed text casing (Title Case for names, Proper Case for categories)', 'success');
+            renderTable();
+        }
+
+        // Normalize data
+        function normalizeData() {
+            const prices = currentData.map(d => d.price);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            currentData = currentData.map(row => ({
+                ...row,
+                normalized_price: ((row.price - minPrice) / (maxPrice - minPrice)).toFixed(3)
+            }));
+            addLog(`Normalized prices (Min-Max scaling). Range: $${minPrice} - $${maxPrice}`, 'success');
+            renderTable();
+        }
+
+        // Add calculated fields
+        function addCalculatedFields() {
+            currentData = currentData.map(row => ({
+                ...row,
+                revenue: (row.price * row.quantity).toFixed(2),
+                discounted_price: (row.price * 0.9).toFixed(2)
+            }));
+            addLog('Added calculated fields: Revenue (price × quantity), Discounted Price (10% off)', 'success');
+            renderTable();
+        }
+
+        // Reset data
+        function resetData() {
+            currentData = [...originalData, ...duplicateData];
+            addLog('Reset to original dirty data', 'warning');
+            renderTable();
+        }
+
+        // Charts
+        let salesChart;
+        function updateCharts() {
+            const categorySales = {};
+            currentData.forEach(row => {
+                if (row.category && row.price && row.quantity) {
+                    const revenue = row.price * (row.quantity || 1);
+                    categorySales[row.category] = (categorySales[row.category] || 0) + revenue;
+                }
+            });
+            
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            if (salesChart) salesChart.destroy();
+            
+            salesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(categorySales),
+                    datasets: [{
+                        label: 'Revenue by Category ($)',
+                        data: Object.values(categorySales),
+                        backgroundColor: ['#1e3c72', '#2a5298', '#4a90e2', '#6ab0f5'],
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Sales Revenue by Category' }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        renderTable();
+        addLog('Data cleaning project initialized. Loaded 17 rows with intentional data issues.');
+    </script>
+</body>
+</html>
